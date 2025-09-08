@@ -1,0 +1,14 @@
+**/__pycache__/
+.venv*/
+notebooks/
+.env
+*.log
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+*.sqlite3
+.DS_Store
+.ipynb_checkpoints/
+.gradio/
+*.egg-info/

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-llm-chatbot"
+version = "0.1.0"
+description = "A model-agnostic chatbot demo with multiple LLM providers."
+authors = [{ name = "Ali Khalaji" }]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "ipykernel",
+    "langchain",
+    "langchain-openai",
+    "langchain-anthropic",
+    "langchain-mistralai",
+    "langchain-google-genai",
+    "langchain-huggingface",
+    "langchain-together",
+    "langgraph",
+    "python-dotenv",
+    "gradio",
+    "fastapi",
+    "uvicorn"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
