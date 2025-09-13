@@ -33,16 +33,13 @@ python app/gradio_app.py
 **Open http://127.0.0.1:7860**
 
 ---
-<!--
-<h4 style="text-align: center;">Model Selection</h4>
-
-<p align="center">
-  <img src="assets/demo_llms.png" alt="Model Selection" width="350"/>
+<h4 style="text-align: center;">Upload Document</h4>
+<p style="text-align: center;">
+  <img src="assets/demo_document_v0.2.0.png" alt="Upload Document Demo" width="350" />
 </p>
 
-<h4 style="text-align: center;">Multilingual Multi‑Model Chatbot Demo v0.1.0</h4>
-
-<p align="center">
-  <img src="assets/demo_v0.1.0.png" alt="Demo" width="350"/>
+<h4 style="text-align: center;">Select Model and Chat</h4>
+<p style="text-align: center;">
+  <img src="assets/demo_chat_v0.2.0.png" alt="Model Selection Demo" width="350" />
 </p>
--->
+
