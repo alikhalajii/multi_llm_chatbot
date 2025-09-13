@@ -1,11 +1,13 @@
 **/__pycache__/
 .venv*/
 notebooks/
+tests/
 .env
 *.log
 *.pyc
 *.pyo
 *.pyd
+.flake8
 .mypy_cache/
 *.sqlite3
 .DS_Store

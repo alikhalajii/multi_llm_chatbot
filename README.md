@@ -1,36 +1,39 @@
 # <img src="assets/logo.png" width="40" style="vertical-align: middle;"/> Multi-LLM Chatbot
 
-
-> **⚠️ Under Development:** This is the initial commit and represents the very first step of the project.  
+> ⚠️ **Work in Progress**: This project is in early development.  
 > Features, structure, and documentation will evolve quickly.
 
-
-A multi–Large Language Model chatbot built with [LangChain](https://github.com/langchain-ai/langchain) and [Together AI](https://github.com/togethercomputer/together-python).  
-Easily switch between different LLM backends and interact through a simple [Gradio](https://gradio.app/) web interface.
+A multilingual **retrieval-augmented chatbot** powered by [LangChain](https://github.com/langchain-ai/langchain), [Together AI](https://github.com/togethercomputer/together-python), [FastAPI](https://fastapi.tiangolo.com/), and [pgvector](https://github.com/pgvector/pgvector), with the ability to easily switch between different Language models.
 
 
 ---
 
 ## Usage
 
-**Create and activate a new virtual environment**
 ```bash
+# 1. Create and activate a new virtual environment
 python -m venv .venv
 source .venv/bin/activate
-```
-**Install repo as a package**
-```bash
-pip install -e .
-```
-Make sure you have placed your TogetherAI API key in the `.env` file to access more models.
 
-**Run the demo**
-```bash
+# 2. Install repo as a package
+pip install -e .
+
+# 3. Add your TogetherAI API key in the `.env` file
+
+# 4. Start PostgreSQL + pgvector
+docker compose up -d
+
+# 5. Run FastAPI backend
+uvicorn app.main:app --reload
+# Docs available at: http://localhost:8000/docs
+
+# 6. Run Gradio frontend
 python app/gradio_app.py
 ```
+**Open http://127.0.0.1:7860**
 
 ---
-
+<!--
 <h4 style="text-align: center;">Model Selection</h4>
 
 <p align="center">
@@ -42,3 +45,4 @@ python app/gradio_app.py
 <p align="center">
   <img src="assets/demo_v0.1.0.png" alt="Demo" width="350"/>
 </p>
+-->

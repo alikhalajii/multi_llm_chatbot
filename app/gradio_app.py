@@ -1,30 +1,51 @@
 import gradio as gr
-from langchain.schema import HumanMessage
-from app.core.pipeline import app, build_config
-from app.models import TOGETHER_MODEL_MAP
+import requests
+import os
 
-MODEL_KEYS = list(TOGETHER_MODEL_MAP.keys())
+from app.llms import TOGETHER_MODEL_MAP, DEFAULT_MODELS
+
+API_URL = "http://localhost:8000"
 
 
-def chatbot_fn(user_input, history, model_key):
-    """ Gradio chatbot function to handle user input and generate responses."""
-    config = build_config("together", model_key)
-    input_messages = [HumanMessage(user_input)]
-    output = app.invoke({"messages": input_messages}, config)
-    answer = output["messages"][-1].content
+def upload_docs(file_paths):
+    """ Upload multiple text files to the backend API. """
+    if not file_paths:
+        return "No file selected"
+    if not isinstance(file_paths, list):
+        file_paths = [file_paths]
+
+    files_to_send = []
+    for path in file_paths:
+        with open(path, "rb") as f:
+            content = f.read()
+            files_to_send.append(("files", (os.path.basename(path), content, "text/plain")))
+
+    try:
+        response = requests.post(f"{API_URL}/document/", files=files_to_send)
+        return response.text
+    except Exception as e:
+        return f"Upload failed: {e}"
+
+
+def chat_fn(user_input, history, model_key):
+    """ Send user input and chat history to the backend API and get the response. """
+    # Ensure user_input is a string
+    user_input = user_input if isinstance(user_input, str) else " ".join(user_input)
+    
+    payload = {"user_input": user_input, "history": history, "model_key": model_key}
+    response = requests.post(f"{API_URL}/chat/", json=payload)
+
+    if response.status_code != 200:
+        history.append({"role": "assistant", "content": f"Error {response.status_code}: {response.text}"})
+        return history, history, ""
+
+    data = response.json()
+    answer = data["response"]
 
     history.append({"role": "user", "content": user_input})
     history.append({"role": "assistant", "content": answer})
 
-    num_user_msgs = sum(1 for msg in history if msg["role"] == "user")
-    height = "50vh" if num_user_msgs == 1 else None
-
-    chat_data = [(msg["content"], None) if msg["role"] == "user" else (None, msg["content"]) for msg in history]
-
-    if height:
-        return history, gr.update(visible=True, value=chat_data, height=height), ""
-    else:
-        return history, gr.update(visible=True, value=chat_data), ""
+    return history, history, ""
 
 
 with gr.Blocks(css="""
@@ -33,155 +54,106 @@ with gr.Blocks(css="""
         background-size: 400% 400%;
         animation: gradientShift 15s ease infinite;
         font-family: 'Segoe UI', sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
     }
 
     @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
-    .gradio-container {
-        width: 90%;
-        max-width: 800px;
-        min-height: 100vh;
-        background-color: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        overflow-y: auto;
-    }
-
-    #title {
-        font-size: 22px;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-
-    .gr-chatbot {
-        background: linear-gradient(to bottom right, #e0f7fa, #ffffff);
-        border: 2px solid #1A2980;
-        border-radius: 12px;
-        padding: 16px 16px 4px 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        min-height: 100px;
-        max-height: 80vh;
-        overflow-y: auto;
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
-
-    .gr-textbox textarea {
-        font-size: 16px;
-        font-weight: bold;
-        background-color: #ffffff;
-        border-radius: 8px;
-        border: 2px solid #0077cc;
-        padding: 10px;
-        box-shadow: 0 0 4px rgba(0,0,0,0.1);
-        transition: border-color 0.3s ease;
-    }
-
-    .gr-textbox textarea:focus {
-        border-color: #00bfa6;
-        outline: none;
+        0% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
+        100% {background-position: 0% 50%;}
     }
 
     .gr-button {
-        font-size: 16px;
-        padding: 10px 20px;
+        font-size: 16px !important;
+        padding: 10px 20px !important;
+        border-radius: 12px !important;
+    }
+
+    .gr-textbox, .gr-file, .gr-dropdown {
+        border-radius: 12px !important;
+    }
+
+    #logo {
+        display: block;
+        margin: 0 auto 10px auto; /* top: 0, right/left: auto, bottom: 10px */
+        width: 100px; /* or whatever size works best */
     }
 
     #input-bar {
         position: sticky;
         bottom: 0;
         background: white;
-        padding-top: 10px;
+        padding: 10px;
         z-index: 10;
+        border-top: 2px solid #ccc;
+    }
+               
+    #subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #333;
+        margin-top: 5px;
+        font-family: 'Arial', sans-serif;
     }
 
-    .human-msg, .ai-msg {
-        background-color: #f1f3f5;
-        color: #000;
-        padding: 10px 14px;
-        border-radius: 12px;
-        max-width: 95%;
-        margin: 8px auto;
-        margin-bottom: 0;
-        padding-bottom: 0;
-        line-height: 1.6;
-        font-size: 16px;
-        white-space: pre-wrap;
-        word-break: break-word;
+    .powered-by {
+        font-size: 10px;
+        color: #777;
         display: block;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-top: 2px;
+    }
+             
+    #send-btn button {
+        background: linear-gradient(90deg, #ff007f, #ff9900, #00ffcc, #3399ff, #cc33ff);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .human-msg {
-        background-color: #d0ebff;
-        border-left: 4px solid #0077cc;
+    #send-btn button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
     }
 
-    .ai-msg {
-        background-color: #f1f3f5;
-        border-left: 4px solid #999;
-    }
-
-    @media (max-width: 768px) {
-        .gradio-container {
-            max-width: 100%;
-            max-height: none;
-            border-radius: 0;
-            box-shadow: none;
-            padding: 10px;
-        }
-
-        #title {
-            font-size: 18px;
-        }
-    }
 """) as demo:
+    
+    with gr.Column():
+        gr.Image("assets/logo.png", elem_id="logo", show_label=False)
 
-    with gr.Row():
-        with gr.Column(scale=6):
-            gr.Image("assets/logo.png", show_label=False, width=80)
-            gr.Markdown("### 🤖 Multi-Modell KI-Chatbot", elem_id="title")
-        with gr.Column(scale=6):
-            model_choice = gr.Dropdown(
-                choices=MODEL_KEYS,
-                value="llama_3_70b",
-                label="Modell auswählen:",
-                interactive=True
-            )
+    gr.HTML("""
+        <div id="subtitle">
+            Multi-LLM Chatbot<br>
+            <span class="powered-by">powered by Langchain, FastAPI, PGVector</span>
+        </div>
+    """)
 
-    chatbot = gr.Chatbot(label="💬 Chatverlauf", visible=False)
 
-    # add some vblank rows for spacing
-    for _ in range(12):
-        gr.Row()
+    with gr.Tab("Upload Documents"):
+        file_input = gr.File(file_types=[".txt"], type="filepath", label="Upload .txt files")
+        upload_button = gr.Button("Upload")
+        upload_output = gr.Textbox()
+        upload_button.click(upload_docs, inputs=file_input, outputs=upload_output)
 
-    with gr.Row(elem_id="input-bar"):
-        with gr.Column(scale=10):
-            msg = gr.Textbox(
-                placeholder="📝 Schreibe hier...",
-                label="Was möchtest du sagen?",
-                lines=1,
-                max_lines=6,
-                show_copy_button=False
-            )
-        with gr.Column(scale=2):
-            send_btn = gr.Button("➤", variant="primary")
+    with gr.Tab("Chat"):
+        model_choice = gr.Dropdown(
+            choices=list(TOGETHER_MODEL_MAP.keys()),
+            value=DEFAULT_MODELS["together"],  # default selection
+            label="Choose a Chat Model"
+        )
 
-    state = gr.State([])
+        chatbot = gr.Chatbot(label="Chat", type="messages")
+        state = gr.State([])
+        with gr.Row(elem_id="input-bar"):
+            msg = gr.Textbox(placeholder="Type your message here...", scale=4, show_label=False)
+            send_btn = gr.Button("Send", elem_id="send-btn", scale=1)
 
-    send_btn.click(chatbot_fn, [msg, state, model_choice], [state, chatbot, msg])
-    msg.submit(chatbot_fn, [msg, state, model_choice], [state, chatbot, msg])
+        send_btn.click(chat_fn, [msg, state, model_choice], [state, chatbot, msg])
+        msg.submit(chat_fn, [msg, state, model_choice], [state, chatbot, msg])
+
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    demo.launch()

@@ -4,53 +4,73 @@ from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_together import ChatTogether
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 
 from app.config import get_api_key
-from app.models import DEFAULT_MODELS, TOGETHER_MODEL_MAP, DEFAULT_PARAMS
+from app.llms import DEFAULT_MODELS, TOGETHER_MODEL_MAP, DEFAULT_PARAMS
 
 
-def get_chat_model(provider: str, model: str | None = None, chain: bool = False, **kwargs):
+def get_chat_model(provider: str, model_key: str | None = None, **kwargs) -> object:
+    """
+    Return a chat model instance for the given provider and model.
+
+    Args:
+        provider (str): Name of the provider ("openai", "anthropic", "mistral",
+                        "gemini", "huggingface", "together").
+        model_key (str | None): Model identifier. If None, a default will be used.
+        **kwargs: Extra model parameters (overrides DEFAULT_PARAMS).
+
+    Returns:
+        LangChain Chat instance.
+    """
     params = {**DEFAULT_PARAMS, **kwargs}
     provider = provider.lower()
 
     if provider == "openai":
-        llm = ChatOpenAI(model=model or DEFAULT_MODELS["openai"],
-                         api_key=get_api_key("OPENAI_API_KEY", "Enter your OpenAI API key"),
-                         **params)
+        return ChatOpenAI(
+            model=model_key or DEFAULT_MODELS["openai"],
+            api_key=get_api_key("OPENAI_API_KEY"),
+            **params
+        )
+
     elif provider == "anthropic":
-        llm = ChatAnthropic(model=model or DEFAULT_MODELS["anthropic"],
-                            api_key=get_api_key("ANTHROPIC_API_KEY", "Enter your Anthropic API key"),
-                            **params)
+        return ChatAnthropic(
+            model=model_key or DEFAULT_MODELS["anthropic"],
+            api_key=get_api_key("ANTHROPIC_API_KEY"),
+            **params
+        )
+
     elif provider == "mistral":
-        llm = ChatMistralAI(model=model or DEFAULT_MODELS["mistral"],
-                            api_key=get_api_key("MISTRAL_API_KEY", "Enter your Mistral API key"),
-                            **params)
+        return ChatMistralAI(
+            model=model_key or DEFAULT_MODELS["mistral"],
+            api_key=get_api_key("MISTRAL_API_KEY"),
+            **params
+        )
+
     elif provider == "gemini":
-        llm = ChatGoogleGenerativeAI(model=model or DEFAULT_MODELS["gemini"],
-                                     google_api_key=get_api_key("GOOGLE_API_KEY", "Enter your Google API key"),
-                                     **params)
+        return ChatGoogleGenerativeAI(
+            model=model_key or DEFAULT_MODELS["gemini"],
+            google_api_key=get_api_key("GOOGLE_API_KEY"),
+            **params
+        )
+
     elif provider == "huggingface":
-        llm = HuggingFaceEndpoint(repo_id=model or DEFAULT_MODELS["huggingface"],
-                                  task="text-generation",
-                                  huggingfacehub_api_token=get_api_key("HUGGINGFACE_API_KEY", "Enter your HuggingFace token"),
-                                  **params)
+        return HuggingFaceEndpoint(
+            repo_id=model_key or DEFAULT_MODELS["huggingface"],
+            task="text-generation",
+            huggingfacehub_api_token=get_api_key("HUGGINGFACE_API_KEY"),
+            **params
+        )
+
     elif provider == "together":
-        model_id = TOGETHER_MODEL_MAP.get(model, model)
+        # Map friendly key to Together model id
+        model_id = TOGETHER_MODEL_MAP.get(model_key, model_key)
         if not model_id:
-            raise ValueError("Invalid Together model id.")
-        llm = ChatTogether(model=model_id,
-                           api_key=get_api_key("TOGETHER_API_KEY", "Enter your Together API key"),
-                           **params)
+            raise ValueError(f"Invalid TogetherAI model key: {model_key}")
+        return ChatTogether(
+            model=model_id,
+            api_key=get_api_key("TOGETHER_API_KEY"),
+            **params
+        )
+
     else:
         raise ValueError(f"Unknown provider: {provider}")
-
-    if chain:
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful assistant. Keep answers short."),
-            ("human", "{input}")
-        ])
-        return prompt | llm | StrOutputParser()
-
-    return llm

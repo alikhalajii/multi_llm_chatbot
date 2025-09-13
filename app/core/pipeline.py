@@ -1,51 +1,29 @@
+from typing import Dict, Any, List
+from langchain_core.messages import BaseMessage
 from app.core.adapters import get_chat_model
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import START, MessagesState, StateGraph
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from app.llms import TOGETHER_MODEL_MAP, DEFAULT_MODELS
+
+DEFAULT_TOGETHER_KEY = DEFAULT_MODELS["together"]
 
 
-#  Define the workflow
-workflow = StateGraph(state_schema=MessagesState)
+class SimpleChatApp:
+    def __init__(self, provider: str, model_key: str | None = None):
+        resolved_key: str = model_key if model_key else DEFAULT_TOGETHER_KEY
+        model_id: str = TOGETHER_MODEL_MAP.get(resolved_key, resolved_key)
+        print(f"🤖 Initializing SimpleChatApp with model: {resolved_key} -> {model_id}")
+        self.llm = get_chat_model(provider, model_id)
+
+    def invoke(self, state: Dict[str, Any], config: Dict[str, Any] | None = None) -> Dict[str, List[BaseMessage]]:
+        messages: List[BaseMessage] = state["messages"]
+        ai_msg = self.llm.invoke(messages)
+        return {"messages": [ai_msg]}
 
 
-def call_model(state: MessagesState):
-    """Call the model with the current state messages."""
-    model = config["configurable"]["model"]
-    prompt = prompt_template.invoke(state)
-    response = model.invoke(prompt)
-    return {"messages": response}
+def build_config(provider: str, model_key: str | None = None) -> Dict[str, Any]:
+    """ Build a configuration dictionary for initializing SimpleChatApp. """
+    resolved_key: str = model_key if model_key else DEFAULT_TOGETHER_KEY
+    return {"configurable": {"thread_id": "abc123"}, "model": resolved_key}
 
 
-workflow.add_edge(START, "model")
-workflow.add_node("model", call_model)
-
-memory = MemorySaver()
-app = workflow.compile(checkpointer=memory)
-
-# Default model config
-model_id = get_chat_model("together", "llama_3_8b")
-config = {
-    "configurable": {
-        "thread_id": "thread_123",
-        "model": model_id
-    }
-}
-
-# Prompt template
-prompt_template = ChatPromptTemplate.from_messages(
-    [
-        ("system", "Du sprichst wie ein höflicher Assistent. Antworte immer klar und kurz in der Sprache des Benutzers."),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
-
-
-def build_config(provider: str, model_key: str, thread_id="thread_123"):
-    """Return a pipeline configuration with selected provider/model."""
-    model_id = get_chat_model(provider, model_key)
-    return {
-        "configurable": {
-            "thread_id": thread_id,
-            "model": model_id
-        }
-    }
+# Initialize a default SimpleChatApp instance with Together model
+app = SimpleChatApp("together", DEFAULT_TOGETHER_KEY)
