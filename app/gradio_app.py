@@ -4,7 +4,7 @@ import os
 
 from app.llms import TOGETHER_MODEL_MAP, DEFAULT_MODELS
 
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
 def upload_docs(file_paths):
@@ -25,7 +25,7 @@ def upload_docs(file_paths):
         return response.text
     except Exception as e:
         return f"Upload failed: {e}"
-    
+
 
 def list_docs():
     """Fetch docs as a list of rows for a DataFrame."""
@@ -125,7 +125,7 @@ with gr.Blocks(css="""
         z-index: 10;
         border-top: 2px solid #ccc;
     }
-               
+
     #subtitle {
         text-align: center;
         font-size: 14px;
@@ -140,7 +140,7 @@ with gr.Blocks(css="""
         display: block;
         margin-top: 2px;
     }
-             
+
     #send-btn button {
         background: linear-gradient(90deg, #ff007f, #ff9900, #00ffcc, #3399ff, #cc33ff);
         color: white;
@@ -159,7 +159,7 @@ with gr.Blocks(css="""
     }
 
 """) as demo:
-    
+
     with gr.Column():
         gr.Image("assets/logo.png", elem_id="logo", show_label=False)
 
@@ -196,7 +196,6 @@ with gr.Blocks(css="""
             outputs=[delete_output, docs_table]
         )
 
-
     with gr.Tab("Chat"):
         model_choice = gr.Dropdown(
             choices=list(TOGETHER_MODEL_MAP.keys()),
@@ -215,4 +214,8 @@ with gr.Blocks(css="""
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False
+        )
