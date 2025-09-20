@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-llm-chatbot"
-version = "0.2.0"
-description = "A multilingual, retrieval-augmented chatbot using LangChain, Together AI, FastAPI, and pgvector."
+version = "0.2.1"
+description = "A multilingual, retrieval-augmented chatbot using LangChain, TogetherAI, FastAPI, and pgvector."
 authors = [{ name = "Ali Khalaji" }]
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -17,7 +17,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 
-]
 requires-python = ">=3.12"
 dependencies = [
     "fastapi==0.116.1",
@@ -29,6 +28,7 @@ dependencies = [
     "langchain-mistralai==0.2.11",
     "langchain-openai==0.3.32",
     "langchain-together==0.3.1",
+    "langdetect",
     "pgvector==0.4.1",
     "psycopg2-binary==2.9.10",
     "pydantic==2.11.7",

@@ -2,8 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.user_document import UserDocument
 
-# Cosine distance ∈ [0, 2]
-SIMILARITY_THRESHOLD = 0.8  
+SIMILARITY_THRESHOLD = 0.7  
 
 
 def retrieve_similar_docs(db: Session, query_vec, top_k: int = 3):

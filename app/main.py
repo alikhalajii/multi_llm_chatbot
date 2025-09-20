@@ -1,9 +1,14 @@
 from fastapi import FastAPI
+
 from app.core.db import Base, engine
 from app.core.db_check import check_pgvector
 from app.api import chatbot, document, debug
+from app.core.logging_config import setup_logging
+
 
 app = FastAPI(title="Multi-LLM Chatbot API")
+
+setup_logging()
 
 # Check pgvector extension
 check_pgvector()

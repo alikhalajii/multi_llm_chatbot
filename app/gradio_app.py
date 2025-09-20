@@ -25,13 +25,57 @@ def upload_docs(file_paths):
         return response.text
     except Exception as e:
         return f"Upload failed: {e}"
+    
+
+def list_docs():
+    """Fetch docs as a list of rows for a DataFrame."""
+    response = requests.get(f"{API_URL}/document/")
+    if response.status_code != 200:
+        return [["Error", response.text, ""]]
+
+    docs = response.json()
+    if not docs:
+        return []
+
+    # Add a "Select" column with False by default
+    rows = [[False, d["id"], d["filename"], d["content_preview"]] for d in docs]
+    return rows
+
+
+def delete_selected(rows):
+    """Delete all docs that were selected in DataFrame."""
+    # If DataFrame → convert to list of lists
+    if hasattr(rows, "to_numpy"):  # pandas.DataFrame
+        rows = rows.to_numpy().tolist()
+
+    if not rows:
+        return "No documents in list", list_docs()
+
+    deleted = []
+    errors = []
+    for row in rows:
+        if row[0]:  # first column = checkbox
+            doc_id = int(row[1])
+            res = requests.delete(f"{API_URL}/document/{doc_id}")
+            if res.status_code == 200:
+                deleted.append(doc_id)
+            else:
+                errors.append(f"{doc_id} (status {res.status_code})")
+
+    msg = ""
+    if deleted:
+        msg += f"✅ Deleted: {deleted}\n"
+    if errors:
+        msg += f"⚠️ Errors: {errors}\n"
+    if not msg:
+        msg = "No docs selected"
+
+    return msg, list_docs()
 
 
 def chat_fn(user_input, history, model_key):
-    """ Send user input and chat history to the backend API and get the response. """
-    # Ensure user_input is a string
     user_input = user_input if isinstance(user_input, str) else " ".join(user_input)
-    
+
     payload = {"user_input": user_input, "history": history, "model_key": model_key}
     response = requests.post(f"{API_URL}/chat/", json=payload)
 
@@ -40,12 +84,7 @@ def chat_fn(user_input, history, model_key):
         return history, history, ""
 
     data = response.json()
-    answer = data["response"]
-
-    history.append({"role": "user", "content": user_input})
-    history.append({"role": "assistant", "content": answer})
-
-    return history, history, ""
+    return data["history"], data["history"], ""
 
 
 with gr.Blocks(css="""
@@ -131,12 +170,32 @@ with gr.Blocks(css="""
         </div>
     """)
 
-
-    with gr.Tab("Upload Documents"):
+    with gr.Tab("Documents"):
         file_input = gr.File(file_types=[".txt"], type="filepath", label="Upload .txt files")
         upload_button = gr.Button("Upload")
         upload_output = gr.Textbox()
-        upload_button.click(upload_docs, inputs=file_input, outputs=upload_output)
+
+        docs_table = gr.DataFrame(
+            headers=["Select", "ID", "Filename", "Preview"],
+            datatype=["bool", "number", "str", "str"],
+            interactive=True,
+            row_count=(0, "dynamic"),
+            col_count=(4, "fixed")
+        )
+        refresh_button = gr.Button("Refresh List")
+        delete_button = gr.Button("Delete Selected")
+        delete_output = gr.Textbox()
+
+        upload_button.click(upload_docs, inputs=file_input, outputs=upload_output).then(
+            list_docs, outputs=docs_table
+        )
+        refresh_button.click(list_docs, outputs=docs_table)
+        delete_button.click(
+            delete_selected,
+            inputs=docs_table,
+            outputs=[delete_output, docs_table]
+        )
+
 
     with gr.Tab("Chat"):
         model_choice = gr.Dropdown(

@@ -7,6 +7,7 @@ langchain-huggingface==0.3.1
 langchain-mistralai==0.2.11
 langchain-openai==0.3.32
 langchain-together==0.3.1
+langdetect
 pgvector==0.4.1
 psycopg2-binary==2.9.10
 pydantic==2.11.7

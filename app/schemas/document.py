@@ -1,15 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
-class DocumentBase(BaseModel):
-    filename: str
-    preview: Optional[str] = None
-    vector_len: int = 0
-
-
-class DocumentOut(DocumentBase):
+class DocumentOut(BaseModel):
     id: int
+    filename: str
+    content_preview: str
+    vector_len: int
 
     class Config:
         from_attributes = True

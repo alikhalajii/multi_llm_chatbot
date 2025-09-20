@@ -2,8 +2,7 @@
 .venv*/
 notebooks/
 tests/
-.env
-*.log
+logs/
 *.pyc
 *.pyo
 *.pyd

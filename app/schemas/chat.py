@@ -1,13 +1,13 @@
 from pydantic import BaseModel
-from typing import List, Dict, Literal
-from app.llms import DEFAULT_MODELS
+from typing import List, Dict
 
 
 class ChatRequest(BaseModel):
     user_input: str
-    model_key: str = DEFAULT_MODELS["together"]
-    history: List[Dict[str, str]] = []
+    history: List[Dict[str, str]] | None = None
+    model_key: str
 
 
 class ChatResponse(BaseModel):
     response: str
+    history: List[Dict[str, str]]

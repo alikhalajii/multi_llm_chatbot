@@ -35,11 +35,10 @@ python app/gradio_app.py
 ---
 <h4 style="text-align: center;">Upload Document</h4>
 <p style="text-align: center;">
-  <img src="assets/demo_document_v0.2.0.png" alt="Upload Document Demo" width="350" />
+  <img src="assets/demo_document_v0.2.1.png" alt="Documents" width="350" />
 </p>
 
 <h4 style="text-align: center;">Select Model and Chat</h4>
 <p style="text-align: center;">
-  <img src="assets/demo_chat_v0.2.0.png" alt="Model Selection Demo" width="350" />
+  <img src="assets/demo_chat_v0.2.0.png" alt="Chat" width="350" />
 </p>
-
