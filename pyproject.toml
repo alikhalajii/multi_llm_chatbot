@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-llm-chatbot"
-version = "0.2.1"
+version = "0.2.2"
 description = "A multilingual, retrieval-augmented chatbot using LangChain, TogetherAI, FastAPI, and pgvector."
 authors = [{ name = "Ali Khalaji" }]
 readme = "README.md"
@@ -38,6 +38,17 @@ dependencies = [
     "uvicorn==0.35.0"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "httpx"
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+addopts = "--maxfail=1 --disable-warnings -q --cov=app"
+testpaths = ["tests"]

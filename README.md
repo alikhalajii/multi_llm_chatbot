@@ -17,7 +17,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 # 2. Install repo as a package
-pip install -e .
+pip install -e .[dev]
 
 # 3. Add your TogetherAI API key in the `.env` file
 

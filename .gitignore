@@ -1,7 +1,7 @@
 **/__pycache__/
 .venv*/
 notebooks/
-tests/
+.coverage
 logs/
 *.pyc
 *.pyo

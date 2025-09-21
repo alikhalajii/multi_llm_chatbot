@@ -6,7 +6,7 @@ DEFAULT_MODELS = {
     "mistral": "mistral-medium",
     "gemini": "gemini-1.5-flash",
     "huggingface": "deepseek-ai/DeepSeek-R1-0528",
-    "together": "meta_llama_3.1_8b"
+    "together": "meta_llama_3.3_70b"
 
 }
 
@@ -23,8 +23,8 @@ TOGETHER_MODEL_MAP = {
 
 DEFAULT_PARAMS = {
     "max_tokens": 200,
-    "temperature": 0.5,
+    "temperature": 0.7,
 }
 
 
-TOGETHER_DEFAULT = os.getenv("TOGETHER_DEFAULT_MODEL", "Llama_3.1_8B")
+TOGETHER_DEFAULT = os.getenv("TOGETHER_DEFAULT_MODEL", "meta_llama_3.3_70b")
