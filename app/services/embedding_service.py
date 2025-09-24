@@ -1,5 +1,5 @@
 import os
-from typing import List, cast
+from typing import List
 from langchain_together import TogetherEmbeddings
 from pydantic import SecretStr
 
@@ -17,7 +17,7 @@ _embeddings = TogetherEmbeddings(
 
 
 def generate_embedding(text: str) -> List[float]:
-    vec = cast(List[float], _embeddings.embed_query(text))
+    vec: List[float] = list(_embeddings.embed_query(text))
     if len(vec) < EMBEDDING_DIM:
         vec = vec + [0.0] * (EMBEDDING_DIM - len(vec))
     elif len(vec) > EMBEDDING_DIM:

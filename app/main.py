@@ -5,13 +5,16 @@ from app.core.db_check import check_pgvector
 from app.api import chatbot, document, debug
 from app.core.logging_config import setup_logging
 
+setup_logging()
 
 app = FastAPI(title="Multi-LLM Chatbot API")
 
-setup_logging()
 
-# Check pgvector extension
-check_pgvector()
+@app.on_event("startup")
+async def startup_event() -> None:
+    if engine.url.get_backend_name() == "postgresql":
+        check_pgvector()
+
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
