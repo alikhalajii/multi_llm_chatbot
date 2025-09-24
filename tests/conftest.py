@@ -1,9 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app
-from app.core.db import Base, engine, SessionLocal
 from sqlalchemy.orm import Session
 from typing import Generator
+
+from app.main import app as fastapi_app
+from app.core.db import Base, engine, SessionLocal
+import app.models.user_documents  # noqa: F401
 
 
 # Reset DB before each test
@@ -19,7 +21,7 @@ def setup_db() -> Generator[None, None, None]:
 
 @pytest.fixture
 def client() -> TestClient:
-    return TestClient(app)
+    return TestClient(fastapi_app)
 
 
 @pytest.fixture
