@@ -5,7 +5,7 @@ from typing import Generator
 
 from app.main import app as fastapi_app
 from app.core.db import Base, engine, SessionLocal
-import app.models.user_documents  # noqa: F401
+import app.models.user_document  # noqa: F401
 
 
 # Reset DB before each test
