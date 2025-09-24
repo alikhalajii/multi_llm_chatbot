@@ -5,6 +5,10 @@ from app.core.db import Base, engine, SessionLocal
 from sqlalchemy.orm import Session
 from typing import Generator
 
+from app.main import app as fastapi_app
+from app.core.db import Base, engine, SessionLocal
+import app.models.user_document  # noqa: F401
+
 
 # Reset DB before each test
 @pytest.fixture(autouse=True)
