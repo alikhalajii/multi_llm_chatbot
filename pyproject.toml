@@ -54,6 +54,7 @@ where = ["."]
 include = ["app*"]
 
 [tool.mypy]
+files = ["app"]
 ignore_missing_imports = true
 disable_error_code = ["misc"]
 strict = true
