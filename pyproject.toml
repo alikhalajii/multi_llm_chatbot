@@ -42,13 +42,26 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "httpx"
+    "httpx",
+    "ruff",
+    "black",
+    "mypy",
+    "pre-commit"
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
 
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = ["misc"]
+strict = true
+
 [tool.pytest.ini_options]
 addopts = "--maxfail=1 --disable-warnings -q --cov=app"
 testpaths = ["tests"]
+
+[[tool.mypy.overrides]]
+module = ["pydantic", "pydantic.*"]
+ignore_errors = true

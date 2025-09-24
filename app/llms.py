@@ -6,8 +6,7 @@ DEFAULT_MODELS = {
     "mistral": "mistral-medium",
     "gemini": "gemini-1.5-flash",
     "huggingface": "deepseek-ai/DeepSeek-R1-0528",
-    "together": "meta_llama_3.3_70b"
-
+    "together": "meta_llama_3.3_70b",
 }
 
 TOGETHER_MODEL_MAP = {
@@ -18,7 +17,7 @@ TOGETHER_MODEL_MAP = {
     "mistral_7b_v0.2": "mistralai/Mistral-7B-Instruct-v0.2",  # $0.20
     "qwen_2.5_7b_turbo": "Qwen/Qwen2.5-7B-Instruct-Turbo",  # $0.30
     "meta_llama_3.3_70b": "meta-llama/Llama-3.3-70B-Instruct-Turbo",  # $0.88
-    "qwen_2.5_72b": "Qwen/Qwen2.5-72B-Instruct-Turbo"  # $1.20
+    "qwen_2.5_72b": "Qwen/Qwen2.5-72B-Instruct-Turbo",  # $1.20
 }
 
 DEFAULT_PARAMS = {

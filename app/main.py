@@ -23,9 +23,9 @@ app.include_router(debug.router)
 
 
 @app.get("/")
-def read_root():
+def read_root() -> dict[str, str]:
     return {
         "message": "Multi-LLM Chatbot backend is running.",
         "docs": "http://localhost:8000/docs",
-        "gradio": "http://localhost:7860"
+        "gradio": "http://localhost:7860",
     }

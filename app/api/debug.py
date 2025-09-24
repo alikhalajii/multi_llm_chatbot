@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends
+from typing import Any
 from sqlalchemy.orm import Session
+
 from app.core.db import get_db
 from app.models.user_document import UserDocument
 
@@ -7,8 +9,8 @@ router = APIRouter(tags=["debug"])
 
 
 @router.get("/debug/docs")
-async def list_docs(db: Session = Depends(get_db)) -> list[dict]:
-    """ List all stored documents with basic info for debugging purposes. """
+async def list_docs(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+    """List all stored documents with basic info for debugging purposes."""
     docs = db.query(UserDocument).all()
     return [
         {

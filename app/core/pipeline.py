@@ -18,13 +18,13 @@ FALLBACK_PHRASES = {
     "en": "No answer found in the loaded documents.",
     "de": "Keine Antwort in den geladenen Dokumenten gefunden.",
     "fa": "در اسناد بارگذاری‌شده پاسخی پیدا نشد.",
-    "fr": "Aucune réponse trouvée dans les documents chargés."
+    "fr": "Aucune réponse trouvée dans les documents chargés.",
 }
 
 
 def detect_language_simple(text: str) -> str:
     try:
-        return _detect(text)
+        return str(_detect(text))
     except Exception:
         return "en"
 
@@ -34,11 +34,15 @@ class SimpleChatApp:
     def __init__(self, provider: str, model_key: str | None = None):
         resolved_key: str = model_key if model_key else DEFAULT_TOGETHER_KEY
         model_id: str = TOGETHER_MODEL_MAP.get(resolved_key, resolved_key)
-        logger.info("🤖 Initializing SimpleChatApp with model: %s -> %s", resolved_key, model_id)
+        logger.info(
+            "🤖 Initializing SimpleChatApp with model: %s -> %s", resolved_key, model_id
+        )
         self.llm = get_chat_model(provider, model_id)
         self.db = next(get_db())
 
-    def invoke(self, state: Dict[str, Any], config: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    def invoke(
+        self, state: Dict[str, Any], config: Dict[str, Any] | None = None
+    ) -> Dict[str, Any]:
         messages: List[Dict[str, str]] = state["messages"]
         user_query = state.get("user_input")
         if not user_query:
@@ -49,8 +53,12 @@ class SimpleChatApp:
 
         # Log similarity check
         logger.info("[PIPELINE] User query: %s", user_query[:100])
-        logger.info("[PIPELINE] Retrieved %d docs, max_score=%.3f (threshold=%.2f)",
-                    len(docs), max_score, RELEVANCE_THRESHOLD)
+        logger.info(
+            "[PIPELINE] Retrieved %d docs, max_score=%.3f (threshold=%.2f)",
+            len(docs),
+            max_score,
+            RELEVANCE_THRESHOLD,
+        )
 
         # Detect language for fallback
         lang = detect_language_simple(user_query)
@@ -59,8 +67,7 @@ class SimpleChatApp:
         # if no sufficiently relevant docs, return polite fallback (no LLM call)
         if not docs or max_score < RELEVANCE_THRESHOLD:
             logger.info("[PIPELINE] Fallback triggered → responding with: %s", fallback)
-            messages.append({"role": "assistant", "content": fallback})
-            return {"messages": [messages[-1]]}
+            return {"messages": [{"role": "assistant", "content": fallback}]}
 
         # Else: strict grounding
         context_text = "\n\n".join([f"{d.filename}: {d.content}" for d in docs])
@@ -72,7 +79,7 @@ class SimpleChatApp:
                 "If the documents do not contain the answer, reply EXACTLY with: "
                 "'No answer found in the loaded documents.' Do not add anything else."
                 f"\n\nDocuments:\n{context_text}"
-            )
+            ),
         }
 
         # Place system message immediately before last user message
@@ -84,7 +91,7 @@ class SimpleChatApp:
 
 
 def build_config(provider: str, model_key: str | None = None) -> Dict[str, Any]:
-    """ Build configuration for the chat app based on provider and model_key. """
+    """Build configuration for the chat app based on provider and model_key."""
     resolved_key: str = model_key if model_key else DEFAULT_TOGETHER_KEY
     return {"configurable": {"thread_id": "abc123"}, "model": resolved_key}
 

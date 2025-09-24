@@ -2,7 +2,7 @@ from sqlalchemy import text
 from app.core.db import engine
 
 
-def check_pgvector():
+def check_pgvector() -> None:
     """Check if pgvector extension is installed in Postgres."""
     with engine.connect() as conn:
         result = conn.execute(

@@ -8,17 +8,21 @@ from app.services.embedding_service import generate_embedding
 logger = logging.getLogger(__name__)
 
 
-def retrieve_relevant_docs(db: Session, query_vector: list[float], top_k: int = 3):
+def retrieve_relevant_docs(
+    db: Session, query_vector: list[float], top_k: int = 3
+) -> tuple[list[UserDocument], float]:
     """Retrieve top-k most relevant docs using Postgres ANN search (<-> operator)."""
     vector_str = "[" + ",".join(f"{x:.6f}" for x in query_vector) + "]"
 
-    sql = text("""
+    sql = text(
+        """
         SELECT id, filename, content, content_vector,
                1 - (content_vector <-> CAST(:vec AS vector)) AS similarity
         FROM user_documents
         ORDER BY content_vector <-> CAST(:vec AS vector)
         LIMIT :k
-    """)
+    """
+    )
 
     rows = db.execute(sql, {"vec": vector_str, "k": top_k}).mappings().all()
 
@@ -33,14 +37,20 @@ def retrieve_relevant_docs(db: Session, query_vector: list[float], top_k: int = 
         docs.append(doc)
         scores.append(row["similarity"])
 
-        logger.info("[RETRIEVAL] Doc=%s similarity=%.3f snippet=%s",
-                    row["filename"], row["similarity"], (row["content"] or "")[:120])
+        logger.info(
+            "[RETRIEVAL] Doc=%s similarity=%.3f snippet=%s",
+            row["filename"],
+            row["similarity"],
+            (row["content"] or "")[:120],
+        )
 
     max_score = max(scores) if scores else 0.0
     return docs, max_score
 
 
-def store_document_with_embedding(db: Session, filename: str, content: str):
+def store_document_with_embedding(
+    db: Session, filename: str, content: str
+) -> UserDocument:
     """Store a document in DB with embedding."""
     logger.info("[STORE] Saving file=%s with %d characters", filename, len(content))
 

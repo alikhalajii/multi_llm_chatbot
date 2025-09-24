@@ -14,8 +14,10 @@ router = APIRouter()
 
 
 @router.post("/", response_model=List[DocumentOut])
-async def upload_documents(files: List[UploadFile] = File(...), db: Session = Depends(get_db)):
-    """ Upload documents and store their embeddings. """
+async def upload_documents(
+    files: List[UploadFile] = File(...), db: Session = Depends(get_db)
+) -> List[DocumentOut]:
+    """Upload documents and store their embeddings."""
     stored_files = []
     for file in files:
         content = (await file.read()).decode("utf-8")
@@ -23,8 +25,8 @@ async def upload_documents(files: List[UploadFile] = File(...), db: Session = De
 
         doc = UserDocument(
             filename=file.filename,
-            content=content[:2000],   # store limited content
-            content_vector=vector
+            content=content[:2000],
+            content_vector=vector,
         )
         db.add(doc)
         db.commit()
@@ -35,7 +37,9 @@ async def upload_documents(files: List[UploadFile] = File(...), db: Session = De
                 id=doc.id,
                 filename=doc.filename,
                 content_preview=(doc.content[:100] + "...") if doc.content else "",
-                vector_len=len(doc.content_vector) if doc.content_vector is not None else 0
+                vector_len=(
+                    len(doc.content_vector) if doc.content_vector is not None else 0
+                ),
             )
         )
         logger.info("📄 Uploaded document: %s (ID=%s)", doc.filename, doc.id)
@@ -44,23 +48,23 @@ async def upload_documents(files: List[UploadFile] = File(...), db: Session = De
 
 
 @router.get("/", response_model=List[DocumentOut])
-def list_documents(db: Session = Depends(get_db)):
-    """ List all uploaded documents. """
+def list_documents(db: Session = Depends(get_db)) -> List[DocumentOut]:
+    """List all uploaded documents."""
     docs = db.query(UserDocument).all()
     return [
         DocumentOut(
             id=d.id,
             filename=d.filename,
             content_preview=(d.content[:100] + "...") if d.content else "",
-            vector_len=len(d.content_vector) if d.content_vector is not None else 0
+            vector_len=len(d.content_vector) if d.content_vector is not None else 0,
         )
         for d in docs
     ]
 
 
-@router.delete("/{doc_id}")
-def delete_document(doc_id: int, db: Session = Depends(get_db)):
-    """ Delete a document by ID. """
+@router.delete("/{doc_id}", response_model=dict)
+def delete_document(doc_id: int, db: Session = Depends(get_db)) -> dict[str, str]:
+    """Delete a document by ID."""
     doc = db.query(UserDocument).filter(UserDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document_ID not found")

@@ -1,6 +1,7 @@
 **/__pycache__/
 .venv*/
 notebooks/
+**_cache/
 .coverage
 logs/
 *.pyc

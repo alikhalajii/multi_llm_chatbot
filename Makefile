@@ -1,4 +1,4 @@
-.PHONY: db backend frontend dev stop logs test
+.PHONY: db backend frontend dev stop logs test check
 
 COMPOSE = docker compose -f docker-compose.dev.yml
 
@@ -20,12 +20,20 @@ dev:
 	 wait)
 
 stop:
-	$(COMPOSE) down
-	pkill -f "uvicorn app.main:app" || true
-	pkill -f "python app/gradio_app.py" || true
+	docker compose -f docker-compose.dev.yml down --remove-orphans --volumes
+	-pkill -f "uvicorn app.main:app" || true
+	-pkill -f "python app/gradio_app.py" || true
 
 logs:
 	$(COMPOSE) logs -f
 
 test:
 	pytest
+
+lint:
+	ruff check .
+	black --check .
+	mypy app
+
+check:
+	pre-commit run --all-files

@@ -11,18 +11,20 @@ router = APIRouter(tags=["chat"])
 
 
 @router.post("/", response_model=ChatResponse)
-async def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db)):
+async def chat_endpoint(
+    req: ChatRequest, db: Session = Depends(get_db)
+) -> ChatResponse:
     if req.model_key not in TOGETHER_MODEL_MAP:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid model_key '{req.model_key}'. "
-                   f"Allowed values: {list(TOGETHER_MODEL_MAP.keys())}"
+            f"Allowed values: {list(TOGETHER_MODEL_MAP.keys())}",
         )
 
     if not req.user_input.strip():
         return ChatResponse(
             response=f"Hello! I'm {req.model_key}. How can I help you today?",
-            history=req.history or []
+            history=req.history or [],
         )
 
     # Rebuild conversation history
@@ -36,10 +38,19 @@ async def chat_endpoint(req: ChatRequest, db: Session = Depends(get_db)):
     try:
         result = chat_app.invoke({"messages": messages, "user_input": req.user_input})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Model invocation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Model invocation failed: {str(e)}"
+        )
 
     ai_msg: Any = result["messages"][0]
-    reply = ai_msg.content if hasattr(ai_msg, "content") else str(ai_msg)
+
+    # Normalize reply
+    if hasattr(ai_msg, "content"):
+        reply = ai_msg.content
+    elif isinstance(ai_msg, dict):  # dict fallback
+        reply = ai_msg.get("content", "")
+    else:  # plain string
+        reply = str(ai_msg)
 
     # Add assistant reply to history
     messages.append({"role": "assistant", "content": reply})

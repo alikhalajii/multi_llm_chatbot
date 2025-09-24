@@ -1,14 +1,15 @@
 import gradio as gr
 import requests
 import os
+from typing import Any, List, Tuple
 
 from app.llms import TOGETHER_MODEL_MAP, DEFAULT_MODELS
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
-def upload_docs(file_paths):
-    """ Upload multiple text files to the backend API. """
+def upload_docs(file_paths: list[str]) -> str:
+    """Upload multiple text files to the backend API."""
     if not file_paths:
         return "No file selected"
     if not isinstance(file_paths, list):
@@ -18,7 +19,9 @@ def upload_docs(file_paths):
     for path in file_paths:
         with open(path, "rb") as f:
             content = f.read()
-            files_to_send.append(("files", (os.path.basename(path), content, "text/plain")))
+            files_to_send.append(
+                ("files", (os.path.basename(path), content, "text/plain"))
+            )
 
     try:
         response = requests.post(f"{API_URL}/document/", files=files_to_send)
@@ -27,7 +30,7 @@ def upload_docs(file_paths):
         return f"Upload failed: {e}"
 
 
-def list_docs():
+def list_docs() -> list[list[str]]:
     """Fetch docs as a list of rows for a DataFrame."""
     response = requests.get(f"{API_URL}/document/")
     if response.status_code != 200:
@@ -42,7 +45,7 @@ def list_docs():
     return rows
 
 
-def delete_selected(rows):
+def delete_selected(rows: list[list[str]]) -> tuple[str, list[list[str]]]:
     """Delete all docs that were selected in DataFrame."""
     # If DataFrame → convert to list of lists
     if hasattr(rows, "to_numpy"):  # pandas.DataFrame
@@ -73,21 +76,29 @@ def delete_selected(rows):
     return msg, list_docs()
 
 
-def chat_fn(user_input, history, model_key):
+def chat_fn(
+    user_input: str, history: List[dict[str, Any]], model_key: str
+) -> Tuple[List[dict[str, Any]], List[dict[str, Any]], str]:
     user_input = user_input if isinstance(user_input, str) else " ".join(user_input)
 
     payload = {"user_input": user_input, "history": history, "model_key": model_key}
     response = requests.post(f"{API_URL}/chat/", json=payload)
 
     if response.status_code != 200:
-        history.append({"role": "assistant", "content": f"Error {response.status_code}: {response.text}"})
+        history.append(
+            {
+                "role": "assistant",
+                "content": f"Error {response.status_code}: {response.text}",
+            }
+        )
         return history, history, ""
 
     data = response.json()
     return data["history"], data["history"], ""
 
 
-with gr.Blocks(css="""
+with gr.Blocks(
+    css="""
     body {
         background: linear-gradient(-45deg, #001F3F, #023562, #0F2027, #1A2980);
         background-size: 400% 400%;
@@ -158,20 +169,24 @@ with gr.Blocks(css="""
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
     }
 
-""") as demo:
-
+"""
+) as demo:
     with gr.Column():
         gr.Image("assets/logo.png", elem_id="logo", show_label=False)
 
-    gr.HTML("""
+    gr.HTML(
+        """
         <div id="subtitle">
             Multi-LLM Chatbot<br>
             <span class="powered-by">powered by Langchain, FastAPI, PGVector</span>
         </div>
-    """)
+    """
+    )
 
     with gr.Tab("Documents"):
-        file_input = gr.File(file_types=[".txt"], type="filepath", label="Upload .txt files")
+        file_input = gr.File(
+            file_types=[".txt"], type="filepath", label="Upload .txt files"
+        )
         upload_button = gr.Button("Upload")
         upload_output = gr.Textbox()
 
@@ -180,7 +195,7 @@ with gr.Blocks(css="""
             datatype=["bool", "number", "str", "str"],
             interactive=True,
             row_count=(0, "dynamic"),
-            col_count=(4, "fixed")
+            col_count=(4, "fixed"),
         )
         refresh_button = gr.Button("Refresh List")
         delete_button = gr.Button("Delete Selected")
@@ -191,22 +206,22 @@ with gr.Blocks(css="""
         )
         refresh_button.click(list_docs, outputs=docs_table)
         delete_button.click(
-            delete_selected,
-            inputs=docs_table,
-            outputs=[delete_output, docs_table]
+            delete_selected, inputs=docs_table, outputs=[delete_output, docs_table]
         )
 
     with gr.Tab("Chat"):
         model_choice = gr.Dropdown(
             choices=list(TOGETHER_MODEL_MAP.keys()),
             value=DEFAULT_MODELS["together"],  # default selection
-            label="Choose a Chat Model"
+            label="Choose a Chat Model",
         )
 
         chatbot = gr.Chatbot(label="Chat", type="messages")
         state = gr.State([])
         with gr.Row(elem_id="input-bar"):
-            msg = gr.Textbox(placeholder="Type your message here...", scale=4, show_label=False)
+            msg = gr.Textbox(
+                placeholder="Type your message here...", scale=4, show_label=False
+            )
             send_btn = gr.Button("Send", elem_id="send-btn", scale=1)
 
         send_btn.click(chat_fn, [msg, state, model_choice], [state, chatbot, msg])
@@ -214,8 +229,4 @@ with gr.Blocks(css="""
 
 
 if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=False
-        )
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=False)
